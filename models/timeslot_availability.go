@@ -33,3 +33,20 @@ func MarkTimeslotUnavailable(courtId int, timeslotId int, bookingDate string) er
         ON CONFLICT (court_id, timeslot_id, booking_date) DO UPDATE SET is_active = false, updated_at = now()`, courtId, timeslotId, bookingDate).Exec()
 	return err
 }
+
+// MarkTimeslotAvailable marks timeslot as available (is_active=true) for a given court and date
+func MarkTimeslotAvailable(courtId int, timeslotId int, bookingDate string) error {
+	o := orm.NewOrm()
+	// Upsert to set is_active = true
+	_, err := o.Raw(`INSERT INTO timeslot_availabilities (court_id, timeslot_id, booking_date, is_active, created_at, updated_at)
+		VALUES (?, ?, ?, true, now(), now())
+		ON CONFLICT (court_id, timeslot_id, booking_date) DO UPDATE SET is_active = true, updated_at = now()`, courtId, timeslotId, bookingDate).Exec()
+	return err
+}
+
+// RemoveAvailabilityRow deletes the availability row (optional) for cleanliness
+func RemoveAvailabilityRow(courtId int, timeslotId int, bookingDate string) error {
+	o := orm.NewOrm()
+	_, err := o.Raw(`DELETE FROM timeslot_availabilities WHERE court_id = ? AND timeslot_id = ? AND booking_date = ?`, courtId, timeslotId, bookingDate).Exec()
+	return err
+}

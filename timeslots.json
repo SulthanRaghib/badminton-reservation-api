@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "message": "Timeslots retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "start_time": "07:00:00",
+      "end_time": "08:00:00",
+      "is_active": true,
+      "available": false
+    },
+    {
+      "id": 2,
+      "start_time": "08:00:00",
+      "end_time": "09:00:00",
+      "is_active": true,
+      "available": false
+    },
+    {
+      "id": 3,
+      "start_time": "09:00:00",
+      "end_time": "10:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 4,
+      "start_time": "10:00:00",
+      "end_time": "11:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 5,
+      "start_time": "11:00:00",
+      "end_time": "12:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 6,
+      "start_time": "13:00:00",
+      "end_time": "14:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 7,
+      "start_time": "14:00:00",
+      "end_time": "15:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 8,
+      "start_time": "15:00:00",
+      "end_time": "16:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 9,
+      "start_time": "16:00:00",
+      "end_time": "17:00:00",
+      "is_active": true,
+      "available": true
+    },
+    {
+      "id": 10,
+      "start_time": "18:00:00",
+      "end_time": "19:00:00",
+      "is_active": true,
+      "available": true
+    }
+  ]
+}

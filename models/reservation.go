@@ -77,7 +77,21 @@ func UpdateReservationStatus(id string, status string) error {
 	}
 	r.Status = status
 	_, err := o.Update(r)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// If reservation becomes non-active (expired or cancelled), attempt to release the timeslot
+	if status == "expired" || status == "cancelled" {
+		// Check if there are any other active reservations for same court/timeslot/date
+		cnt, err := o.QueryTable(new(Reservation)).Filter("court_id", r.CourtId).Filter("timeslot_id", r.TimeslotId).Filter("booking_date", r.BookingDate).Filter("status__in", "pending", "waiting_payment", "paid").Count()
+		if err == nil && cnt == 0 {
+			// No other active reservations, mark timeslot available again
+			_ = MarkTimeslotAvailable(r.CourtId, r.TimeslotId, r.BookingDate)
+		}
+	}
+
+	return nil
 }
 
 // CheckAvailability checks if a court is available for a given timeslot and date
@@ -102,7 +116,25 @@ func CheckAvailability(courtId int, timeslotId int, bookingDate string) (bool, e
 func ExpireOldReservations() error {
 	o := orm.NewOrm()
 	now := time.Now()
-	// Raw update: set status to 'expired' where status = 'pending' and expired_at < now
-	_, err := o.Raw("UPDATE reservations SET status = ? WHERE status = ? AND expired_at < ?", "expired", "pending", now).Exec()
-	return err
+	// Find pending reservations whose ExpiredAt < now
+	var list []*Reservation
+	_, err := o.QueryTable(new(Reservation)).Filter("status", "pending").Filter("expired_at__lt", now).All(&list)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range list {
+		// update status to expired
+		if _, err := o.Raw("UPDATE reservations SET status = ? WHERE id = ?", "expired", r.Id).Exec(); err != nil {
+			// continue on error
+			continue
+		}
+		// if no other active reservations exist for same court/timeslot/date, mark timeslot available
+		cnt, err := o.QueryTable(new(Reservation)).Filter("court_id", r.CourtId).Filter("timeslot_id", r.TimeslotId).Filter("booking_date", r.BookingDate).Filter("status__in", "pending", "waiting_payment", "paid").Count()
+		if err == nil && cnt == 0 {
+			_ = MarkTimeslotAvailable(r.CourtId, r.TimeslotId, r.BookingDate)
+		}
+	}
+
+	return nil
 }
