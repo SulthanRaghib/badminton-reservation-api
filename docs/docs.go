@@ -287,9 +287,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reservations/{id}/status": {
+            "post": {
+                "description": "Update reservation status (e.g., expired, cancelled, paid)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservations"
+                ],
+                "summary": "Update reservation status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reservation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.UpdateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/timeslots": {
             "get": {
-                "description": "Returns timeslots available for a given court and booking_date",
+                "description": "Returns all globally active timeslots and an ` + "`" + `available` + "`" + ` boolean per timeslot for the specified court and booking_date. ` + "`" + `available=false` + "`" + ` means the slot is already booked/unavailable for that date and court.",
                 "consumes": [
                     "application/json"
                 ],
@@ -299,7 +340,7 @@ const docTemplate = `{
                 "tags": [
                     "timeslots"
                 ],
-                "summary": "Get available timeslots for a court and date",
+                "summary": "Get timeslots for a court and date (includes availability flag)",
                 "parameters": [
                     {
                         "type": "string",
@@ -404,6 +445,14 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "reservation_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }
