@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "Badminton Reservation API",
+    "description": "API collection for Badminton Court Reservation System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "reservation_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "1. Get Available Dates",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/dates",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "dates"]
+        }
+      }
+    },
+    {
+      "name": "2. Get Available Timeslots",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/timeslots?date=2025-11-10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "timeslots"],
+          "query": [
+            {
+              "key": "date",
+              "value": "2025-11-10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Get All Timeslots",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/timeslots/all",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "timeslots", "all"]
+        }
+      }
+    },
+    {
+      "name": "4. Get Available Courts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/courts?date=2025-11-10&timeslot_id=3",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "courts"],
+          "query": [
+            {
+              "key": "date",
+              "value": "2025-11-10"
+            },
+            {
+              "key": "timeslot_id",
+              "value": "3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Get All Courts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/courts/all",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "courts", "all"]
+        }
+      }
+    },
+    {
+      "name": "6. Create Reservation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data.id) {",
+              "    pm.collectionVariables.set('reservation_id', jsonData.data.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"court_id\": 1,\n  \"timeslot_id\": 3,\n  \"booking_date\": \"2025-11-10\",\n  \"customer_name\": \"John Doe\",\n  \"customer_email\": \"john.doe@example.com\",\n  \"customer_phone\": \"08123456789\",\n  \"notes\": \"Test booking\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/reservations",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "reservations"]
+        }
+      }
+    },
+    {
+      "name": "7. Get Reservation by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/reservations/{{reservation_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "reservations", "{{reservation_id}}"]
+        }
+      }
+    },
+    {
+      "name": "8. Get Reservations by Email",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/reservations/customer?email=john.doe@example.com",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "reservations", "customer"],
+          "query": [
+            {
+              "key": "email",
+              "value": "john.doe@example.com"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Process Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reservation_id\": \"{{reservation_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/payments/process",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "payments", "process"]
+        }
+      }
+    },
+    {
+      "name": "10. Get Payment Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/payments/{{reservation_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "payments", "{{reservation_id}}"]
+        }
+      }
+    },
+    {
+      "name": "11. Payment Callback (Midtrans Webhook)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transaction_time\": \"2025-11-05 10:00:00\",\n  \"transaction_status\": \"settlement\",\n  \"transaction_id\": \"test-transaction-123\",\n  \"status_message\": \"Success\",\n  \"status_code\": \"200\",\n  \"signature_key\": \"test-signature\",\n  \"payment_type\": \"credit_card\",\n  \"order_id\": \"RES-xxxxx\",\n  \"merchant_id\": \"test-merchant\",\n  \"gross_amount\": \"100000.00\",\n  \"fraud_status\": \"accept\",\n  \"currency\": \"IDR\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/payments/callback",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "payments", "callback"]
+        }
+      }
+    }
+  ]
+}
