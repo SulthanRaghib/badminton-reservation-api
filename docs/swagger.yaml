@@ -1,0 +1,270 @@
+definitions:
+  controllers.CreateReservationRequest:
+    properties:
+      booking_date:
+        type: string
+      court_id:
+        type: integer
+      customer_email:
+        type: string
+      customer_name:
+        type: string
+      customer_phone:
+        type: string
+      notes:
+        type: string
+      timeslot_id:
+        type: integer
+    type: object
+  controllers.ProcessPaymentRequest:
+    properties:
+      reservation_id:
+        type: string
+    type: object
+  utils.Response:
+    properties:
+      data: {}
+      error: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/courts:
+    get:
+      consumes:
+      - application/json
+      description: Returns courts available for a given booking_date and timeslot_id
+      parameters:
+      - description: Booking date (YYYY-MM-DD)
+        in: query
+        name: booking_date
+        required: true
+        type: string
+      - description: Timeslot ID
+        in: query
+        name: timeslot_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get available courts for a date and timeslot
+      tags:
+      - courts
+  /api/v1/courts/all:
+    get:
+      consumes:
+      - application/json
+      description: Returns all active courts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get all active courts
+      tags:
+      - courts
+  /api/v1/dates:
+    get:
+      consumes:
+      - application/json
+      description: Get list of available dates for the next N days
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get available dates for booking
+      tags:
+      - dates
+  /api/v1/payments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get payment status by payment ID or reservation ID
+      parameters:
+      - description: Payment ID or Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get payment status
+      tags:
+      - payments
+  /api/v1/payments/callback:
+    post:
+      consumes:
+      - application/json
+      description: Webhook endpoint for Midtrans payment notification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Handle payment callback from Midtrans
+      tags:
+      - payments
+  /api/v1/payments/process:
+    post:
+      consumes:
+      - application/json
+      description: Create payment transaction with Midtrans
+      parameters:
+      - description: Payment details
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.ProcessPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Process payment for a reservation
+      tags:
+      - payments
+  /api/v1/reservations:
+    post:
+      consumes:
+      - application/json
+      description: Create a new court reservation
+      parameters:
+      - description: Reservation details
+        in: body
+        name: reservation
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Create a new reservation
+      tags:
+      - reservations
+  /api/v1/reservations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get reservation details by ID
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get reservation by ID
+      tags:
+      - reservations
+  /api/v1/reservations/customer:
+    get:
+      consumes:
+      - application/json
+      description: Get all reservations for a customer email
+      parameters:
+      - description: Customer email
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get reservations by email
+      tags:
+      - reservations
+  /api/v1/timeslots:
+    get:
+      consumes:
+      - application/json
+      description: Returns timeslots available for a given court and booking_date
+      parameters:
+      - description: Booking date (YYYY-MM-DD)
+        in: query
+        name: booking_date
+        required: true
+        type: string
+      - description: Court ID
+        in: query
+        name: court_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get available timeslots for a court and date
+      tags:
+      - timeslots
+  /api/v1/timeslots/all:
+    get:
+      consumes:
+      - application/json
+      description: Returns all defined timeslots
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get all timeslots
+      tags:
+      - timeslots
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns service health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"

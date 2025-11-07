@@ -1,0 +1,342 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "contact": {}
+  },
+  "paths": {
+    "/api/v1/courts": {
+      "get": {
+        "description": "Returns courts available for a given booking_date and timeslot_id",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["courts"],
+        "summary": "Get available courts for a date and timeslot",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Booking date (YYYY-MM-DD)",
+            "name": "booking_date",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "Timeslot ID",
+            "name": "timeslot_id",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courts/all": {
+      "get": {
+        "description": "Returns all active courts",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["courts"],
+        "summary": "Get all active courts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dates": {
+      "get": {
+        "description": "Get list of available dates for the next N days",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["dates"],
+        "summary": "Get available dates for booking",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/callback": {
+      "post": {
+        "description": "Webhook endpoint for Midtrans payment notification",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["payments"],
+        "summary": "Handle payment callback from Midtrans",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/process": {
+      "post": {
+        "description": "Create payment transaction with Midtrans",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["payments"],
+        "summary": "Process payment for a reservation",
+        "parameters": [
+          {
+            "description": "Payment details",
+            "name": "payment",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/controllers.ProcessPaymentRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/{id}": {
+      "get": {
+        "description": "Get payment status by payment ID or reservation ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["payments"],
+        "summary": "Get payment status",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Payment ID or Reservation ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reservations": {
+      "post": {
+        "description": "Create a new court reservation",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["reservations"],
+        "summary": "Create a new reservation",
+        "parameters": [
+          {
+            "description": "Reservation details",
+            "name": "reservation",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/controllers.CreateReservationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reservations/customer": {
+      "get": {
+        "description": "Get all reservations for a customer email",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["reservations"],
+        "summary": "Get reservations by email",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Customer email",
+            "name": "email",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reservations/{id}": {
+      "get": {
+        "description": "Get reservation details by ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["reservations"],
+        "summary": "Get reservation by ID",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Reservation ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/timeslots": {
+      "get": {
+        "description": "Returns timeslots available for a given court and booking_date",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["timeslots"],
+        "summary": "Get available timeslots for a court and date",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Booking date (YYYY-MM-DD)",
+            "name": "booking_date",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "Court ID",
+            "name": "court_id",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/timeslots/all": {
+      "get": {
+        "description": "Returns all defined timeslots",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["timeslots"],
+        "summary": "Get all timeslots",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns service health status",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["health"],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/utils.Response"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "controllers.CreateReservationRequest": {
+      "type": "object",
+      "properties": {
+        "booking_date": {
+          "type": "string"
+        },
+        "court_id": {
+          "type": "integer"
+        },
+        "customer_email": {
+          "type": "string"
+        },
+        "customer_name": {
+          "type": "string"
+        },
+        "customer_phone": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "timeslot_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "controllers.ProcessPaymentRequest": {
+      "type": "object",
+      "properties": {
+        "reservation_id": {
+          "type": "string"
+        }
+      }
+    },
+    "utils.Response": {
+      "type": "object",
+      "properties": {
+        "data": {},
+        "error": {},
+        "message": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
