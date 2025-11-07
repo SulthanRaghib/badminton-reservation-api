@@ -42,6 +42,14 @@ func GetAllTimeslots() ([]*Timeslot, error) {
 func GetAvailableTimeslots(courtId int, bookingDate string) ([]*Timeslot, error) {
 	o := orm.NewOrm()
 	var slots []*Timeslot
-	_, err := o.QueryTable(new(Timeslot)).Filter("is_active", true).All(&slots)
+	// Return timeslots that are globally active and NOT marked unavailable for this court/date
+	_, err := o.Raw(`SELECT t.id, t.start_time, t.end_time, t.is_active
+		FROM timeslots t
+		WHERE t.is_active = true
+		AND t.id NOT IN (
+			SELECT timeslot_id FROM timeslot_availabilities
+			WHERE court_id = ? AND booking_date = ? AND is_active = false
+		)
+		ORDER BY t.id`, courtId, bookingDate).QueryRows(&slots)
 	return slots, err
 }

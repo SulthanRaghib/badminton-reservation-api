@@ -36,7 +36,17 @@ func CreateReservation(r *Reservation) error {
 	// Use raw insert to avoid drivers that do not support LastInsertId for Postgres
 	_, err := o.Raw(`INSERT INTO reservations (id, court_id, timeslot_id, booking_date, customer_name, customer_email, customer_phone, total_price, status, notes, expired_at, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())`, r.Id, r.CourtId, r.TimeslotId, r.BookingDate, r.CustomerName, r.CustomerEmail, r.CustomerPhone, r.TotalPrice, r.Status, r.Notes, r.ExpiredAt).Exec()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Mark timeslot as unavailable for the specific court and booking date so frontend can label it as booked
+	if err := MarkTimeslotUnavailable(r.CourtId, r.TimeslotId, r.BookingDate); err != nil {
+		// Log the error but do not fail reservation creation; caller can handle.
+		return err
+	}
+
+	return nil
 }
 
 // GetReservationById returns reservation by id
@@ -73,6 +83,14 @@ func UpdateReservationStatus(id string, status string) error {
 // CheckAvailability checks if a court is available for a given timeslot and date
 func CheckAvailability(courtId int, timeslotId int, bookingDate string) (bool, error) {
 	o := orm.NewOrm()
+	// First check if any explicit availability row marks this timeslot unavailable for the court/date
+	// Check timeslot_availabilities table for an explicit unavailable mark
+	availCnt, err := o.QueryTable("timeslot_availabilities").Filter("court_id", courtId).Filter("timeslot_id", timeslotId).Filter("booking_date", bookingDate).Filter("is_active", false).Count()
+	if err == nil && availCnt > 0 {
+		return false, nil
+	}
+
+	// Fallback: check reservations with active statuses
 	cnt, err := o.QueryTable(new(Reservation)).Filter("court_id", courtId).Filter("timeslot_id", timeslotId).Filter("booking_date", bookingDate).Filter("status__in", "pending", "waiting_payment", "paid").Count()
 	if err != nil {
 		return false, err

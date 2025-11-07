@@ -71,6 +71,18 @@ type GormPayment struct {
 
 func (GormPayment) TableName() string { return "payments" }
 
+type GormTimeslotAvailability struct {
+	ID          uint      `gorm:"primaryKey;column:id" json:"id"`
+	CourtId     uint      `gorm:"column:court_id;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;uniqueIndex:idx_timeslot_avail_unique" json:"court_id"`
+	TimeslotId  uint      `gorm:"column:timeslot_id;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;uniqueIndex:idx_timeslot_avail_unique" json:"timeslot_id"`
+	BookingDate string    `gorm:"column:booking_date;size:10;not null;uniqueIndex:idx_timeslot_avail_unique" json:"booking_date"`
+	IsActive    bool      `gorm:"column:is_active;default:true" json:"is_active"`
+	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+}
+
+func (GormTimeslotAvailability) TableName() string { return "timeslot_availabilities" }
+
 // RunGormMigrations connects using GORM and runs AutoMigrate for the migration models.
 // It reads DB connection info from env vars: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSLMODE
 func RunGormMigrations() error {
@@ -100,7 +112,7 @@ func RunGormMigrations() error {
 	}
 
 	// Auto-migrate tables
-	if err := db.AutoMigrate(&GormCourt{}, &GormTimeslot{}, &GormReservation{}, &GormPayment{}); err != nil {
+	if err := db.AutoMigrate(&GormCourt{}, &GormTimeslot{}, &GormReservation{}, &GormPayment{}, &GormTimeslotAvailability{}); err != nil {
 		return fmt.Errorf("gorm automigrate error: %w", err)
 	}
 
