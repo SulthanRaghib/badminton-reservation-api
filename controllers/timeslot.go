@@ -12,10 +12,10 @@ type TimeslotController struct {
 	web.Controller
 }
 
-// GetAvailableTimeslots returns timeslots available for a given court and booking_date
+// GetAvailableTimeslots returns timeslots for a given court and booking_date with availability flag
 // GetAvailableTimeslots godoc
-// @Summary Get available timeslots for a court and date
-// @Description Returns timeslots available for a given court and booking_date
+// @Summary Get timeslots for a court and date (includes availability flag)
+// @Description Returns all globally active timeslots and an `available` boolean per timeslot for the specified court and booking_date. `available=false` means the slot is already booked/unavailable for that date and court.
 // @Tags timeslots
 // @Accept json
 // @Produce json

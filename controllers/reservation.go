@@ -26,6 +26,10 @@ type CreateReservationRequest struct {
 	Notes         string `json:"notes"`
 }
 
+type UpdateStatusRequest struct {
+	Status string `json:"status"`
+}
+
 // CreateReservation godoc
 // @Summary Create a new reservation
 // @Description Create a new court reservation
@@ -202,4 +206,35 @@ func (c *ReservationController) GetReservationsByEmail() {
 	}
 
 	utils.SendSuccess(&c.Controller, "Reservations retrieved successfully", reservations)
+}
+
+// UpdateStatus updates reservation status (admin/test endpoint)
+// @Summary Update reservation status
+// @Description Update reservation status (e.g., expired, cancelled, paid)
+// @Tags reservations
+// @Accept json
+// @Produce json
+// @Param id path string true "Reservation ID"
+// @Param body body UpdateStatusRequest true "Status payload"
+// @Success 200 {object} utils.Response
+// @Router /api/v1/reservations/{id}/status [post]
+func (c *ReservationController) UpdateStatus() {
+	id := c.Ctx.Input.Param(":id")
+	var req UpdateStatusRequest
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &req); err != nil {
+		utils.SendBadRequest(&c.Controller, "Invalid request body", err.Error())
+		return
+	}
+
+	if req.Status == "" {
+		utils.SendBadRequest(&c.Controller, "status is required", nil)
+		return
+	}
+
+	if err := models.UpdateReservationStatus(id, req.Status); err != nil {
+		utils.SendInternalError(&c.Controller, "Error updating reservation status", err.Error())
+		return
+	}
+
+	utils.SendSuccess(&c.Controller, "Reservation status updated", map[string]string{"id": id, "status": req.Status})
 }

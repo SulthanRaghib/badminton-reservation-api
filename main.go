@@ -139,6 +139,7 @@ func main() {
 	logs.Info("      - Query: none (returns next N available dates, see MAX_BOOKING_DAYS_AHEAD env)")
 	logs.Info("  GET  /api/v1/timeslots?booking_date=YYYY-MM-DD&court_id=X")
 	logs.Info("      - Params: booking_date (required), court_id (required)")
+	logs.Info("      - Response: returns globally active timeslots and an 'available' boolean per timeslot; available=false means already booked for that date and court")
 	logs.Info("  GET  /api/v1/timeslots/all")
 	logs.Info("      - Returns all defined timeslots")
 	logs.Info("  GET  /api/v1/courts?booking_date=YYYY-MM-DD&timeslot_id=X")

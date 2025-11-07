@@ -23,6 +23,7 @@ func init() {
 		// Reservation routes
 		web.NSRouter("/reservations", &controllers.ReservationController{}, "post:CreateReservation"),
 		web.NSRouter("/reservations/:id", &controllers.ReservationController{}, "get:GetReservationById"),
+		web.NSRouter("/reservations/:id/status", &controllers.ReservationController{}, "post:UpdateStatus"),
 		web.NSRouter("/reservations/customer", &controllers.ReservationController{}, "get:GetReservationsByEmail"),
 
 		// Payment routes
