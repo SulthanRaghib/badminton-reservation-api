@@ -1,360 +1,196 @@
-# 🏸 Badminton Court Reservation API
+# 🏸 API Reservasi Lapangan Badminton
 
-A RESTful API for managing badminton court reservations with integrated payment gateway (Midtrans).
+Ini adalah backend RESTful API yang dibangun menggunakan framework **Beego (Golang)** untuk mengelola sistem reservasi lapangan badminton. API ini mencakup pengelolaan lapangan, slot waktu, pembuatan reservasi, dan integrasi gateway pembayaran dengan **Midtrans**.
 
-## 🚀 Features
+Proyek ini berfungsi sebagai backend untuk aplikasi frontend Next.js berikut:
 
-- ✅ Fetch available dates for booking
-- ✅ Fetch available timeslots based on selected date
-- ✅ Fetch available courts based on date & timeslot
-- ✅ Create reservations with customer details
-- ✅ Integrated payment gateway (Midtrans)
-- ✅ Automatic reservation expiration (30 minutes)
-- ✅ Background job to cleanup expired reservations
-- ✅ PostgreSQL database (Neon / cloud Postgres)
+➡️ **Frontend Repo:** [https://github.com/SulthanRaghib/badminton-reservation](https://www.google.com/search?q=https://github.com/SulthanRaghib/badminton-reservation)
 
-## 🛠️ Tech Stack
+---
 
-- **Framework**: Beego v2
-- **ORM**: Beego ORM
-- **Database**: PostgreSQL (Neon / cloud Postgres)
-- **Payment Gateway**: Midtrans Snap
-- **Language**: Go 1.21+
+## ✨ Fitur Utama
 
-## 📋 Prerequisites
+- **🏸 Manajemen Lapangan & Slot Waktu:** Menyediakan endpoint untuk mengambil daftar tanggal yang tersedia (`/api/v1/dates`), semua lapangan (`/api/v1/courts/all`), dan ketersediaan slot waktu secara dinamis (`/api/v1/timeslots`).
+- **🧾 Manajemen Reservasi:** Alur lengkap untuk membuat reservasi (`POST /api/v1/reservations`), mengambil detail reservasi berdasarkan ID (`GET /api/v1/reservations/:id`), dan mencari riwayat reservasi berdasarkan email pelanggan (`GET /api/v1/reservations/customer`).
+- **💳 Integrasi Pembayaran Midtrans:** Memproses pembuatan transaksi pembayaran (`POST /api/v1/payments/process`) dan menangani _callback_ (webhook) dari Midtrans untuk memperbarui status pembayaran secara otomatis (`POST /api/v1/payments/callback`).
+- **⌛ Reservasi Berbatas Waktu:** Reservasi yang baru dibuat berstatus `pending` dan akan otomatis `expired` jika tidak dibayar dalam 30 menit (dapat dikonfigurasi melalui `.env`).
+- **🔄 Ketersediaan Slot Dinamis:** Slot waktu akan otomatis ditandai sebagai `unavailable` saat reservasi dibuat dan akan tersedia kembali (`available`) jika reservasi `expired` atau `cancelled`.
+- **🐳 Dukungan Docker:** Termasuk `Dockerfile` dan `docker-entrypoint.sh` untuk build dan deployment yang mudah, yang secara otomatis menjalankan migrasi dan _seeding_.
+- **🧰 Utilitas Database:** Dilengkapi dengan skrip `Makefile` dan CLI (`cmd/`) untuk migrasi database GORM (`make gorm-migrate`) dan _seeding_ data awal (`make db-seed-run`).
+- **📖 Dokumentasi API:** Dokumentasi Swagger UI yang _self-hosted_ tersedia di endpoint `/swagger`.
 
-- Go 1.21 or higher
-- PostgreSQL database (Neon account)
-- Midtrans account (for payment integration)
+---
 
-## 🔧 Installation
+## 🛠️ Tumpukan Teknologi (Tech Stack)
 
-### 1. Clone the repository
+- **Bahasa:** **Go** (v1.24+)
+- **Framework:** **Beego** (v2.3.8)
+- **Database:** **PostgreSQL** (Sangat direkomendasikan menggunakan [Neon](https://neon.tech/))
+- **ORM:** **GORM** (untuk migrasi) & **Beego ORM** (untuk _query_ model)
+- **Gateway Pembayaran:** **Midtrans**
+- **Dokumentasi:** **Swagger** (via `swaggo`)
+- **Konfigurasi:** `godotenv` untuk manajemen _environment variable_
+- **Kontainerisasi:** **Docker**
+- **Peralatan (Tooling):** **Make**
 
-```bash
-git clone <your-repo-url>
-cd badminton-reservation-api
-```
+---
 
-### 2. Install dependencies
+## 🚀 Instalasi & Menjalankan
 
-```bash
-go mod download
-```
+### Prasyarat
 
-### 3. Setup environment variables
+1.  **Go** (versi 1.24 atau lebih baru).
+2.  **PostgreSQL Database:** Direkomendasikan mendaftar di [Neon](https://neon.tech/) untuk mendapatkan _connection string_ Postgres gratis.
+3.  **Akun Midtrans:** Diperlukan akun Sandbox Midtrans untuk mendapatkan _Server Key_.
 
-Copy `.env.example` to `.env` and fill in your credentials:
+### Langkah-langkah Menjalankan (Lokal)
 
-```bash
-cp .env.example .env
-```
+1.  **Clone Repositori**
 
-Edit `.env` file:
+    ```bash
+    git clone https://github.com/SulthanRaghib/badminton-reservation-api.git
+    cd badminton-reservation-api
+    ```
 
-```env
-# App Configuration
-APP_NAME=badminton-reservation-api
-APP_ENV=development
-APP_PORT=8080
-APP_URL=http://localhost:8080
+2.  **Instal Dependensi**
 
-# Neon / PostgreSQL Configuration
-# DB connection: use the connection details from your Neon project (Host, Port, User, Password, DB name)
-DB_HOST=<your-neon-host>
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your_database_password
-DB_NAME=postgres
-DB_SSLMODE=require
+    ```bash
+    go mod download
+    ```
 
-# Midtrans Configuration
-MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxx
-MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxxx
-MIDTRANS_IS_PRODUCTION=false
+3.  **Konfigurasi Environment**
+    Salin file `.env.example` menjadi `.env`.
 
-# Reservation Settings
-RESERVATION_TIMEOUT_MINUTES=30
-MAX_BOOKING_DAYS_AHEAD=30
-```
+    ```bash
+    cp .env.example .env
+    ```
 
-### 4. Run database migrations
+    Buka file `.env` dan isi variabel berikut dengan kredensial Anda (terutama dari Neon dan Midtrans):
 
-Apply the SQL migrations to your Neon/Postgres database. You can use the Neon Console SQL editor or run them with psql. Execute in order:
+    ```env
+    # Database (Neon / Postgres)
+    DB_HOST=<your-neon-host>
+    DB_PORT=5432
+    DB_USER=<your-db-user>
+    DB_PASSWORD=<your-db-password>
+    DB_NAME=<your-db-name>
+    DB_SSLMODE=require
 
-1. `database/migrations/001_create_courts.sql`
-2. `database/migrations/002_create_timeslots.sql`
-3. `database/migrations/003_create_reservations.sql`
-4. `database/migrations/004_create_payments.sql`
+    # Midtrans
+    MIDTRANS_SERVER_KEY=<your-midtrans-server-key>
+    MIDTRANS_CLIENT_KEY=<your-midtrans-client-key>
+    MIDTRANS_IS_PRODUCTION=false
+    ```
 
-### 5. Seed the database
+4.  **Migrasi & Seed Database**
+    Proyek ini menggunakan `make` untuk mempermudah. Cukup jalankan:
 
-Run the seed file:
+    ```bash
+    # Menjalankan migrasi GORM untuk membuat tabel
+    make gorm-migrate
+    ```
 
-```sql
-database/seeds/seed_data.sql
-```
+    ```bash
+    # Mengisi data awal (lapangan & slot waktu)
+    make db-seed-run
+    ```
 
-### 6. Run the application
+5.  **Jalankan Server API**
 
-```bash
-go run main.go
-```
-
-The API will be available at `http://localhost:8080`
-
-## 📚 API Endpoints
-
-### Health Check
-
-```http
-GET /health
-```
-
-### 1. Get Available Dates
-
-Get list of available dates for the next 30 days.
-
-```http
-GET /api/v1/dates
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Available dates retrieved successfully",
-  "data": [
-    {
-      "date": "2025-11-05",
-      "day_name": "Wednesday",
-      "is_weekend": false
-    }
-  ]
-}
-```
-
-### 2. Get Available Timeslots
-
-Get available timeslots for a specific date.
-
-```http
-GET /api/v1/timeslots?date=2025-11-10
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Available timeslots retrieved successfully",
-  "data": [
-    {
-      "id": 1,
-      "start_time": "08:00:00",
-      "end_time": "09:00:00",
-      "is_active": true
-    }
-  ]
-}
-```
-
-### 3. Get Available Courts
-
-Get available courts for specific date and timeslot.
-
-```http
-GET /api/v1/courts?date=2025-11-10&timeslot_id=3
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Available courts retrieved successfully",
-  "data": [
-    {
-      "id": 1,
-      "name": "Court A",
-      "description": "Premium indoor court",
-      "price_per_hour": 100000,
-      "status": "active"
-    }
-  ]
-}
-```
-
-### 4. Create Reservation
-
-Create a new court reservation.
-
-```http
-POST /api/v1/reservations
-Content-Type: application/json
-
-{
-  "court_id": 1,
-  "timeslot_id": 3,
-  "booking_date": "2025-11-10",
-  "customer_name": "John Doe",
-  "customer_email": "john@example.com",
-  "customer_phone": "08123456789",
-  "notes": "Optional notes"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Reservation created successfully",
-  "data": {
-    "id": "uuid-here",
-    "court_id": 1,
-    "timeslot_id": 3,
-    "booking_date": "2025-11-10",
-    "customer_name": "John Doe",
-    "total_price": 100000,
-    "status": "pending",
-    "expired_at": "2025-11-05T10:30:00Z"
-  }
-}
-```
-
-### 5. Process Payment
-
-Initiate payment for a reservation.
-
-```http
-POST /api/v1/payments/process
-Content-Type: application/json
-
-{
-  "reservation_id": "uuid-here"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Payment transaction created successfully",
-  "data": {
-    "payment_id": "payment-uuid",
-    "token": "midtrans-snap-token",
-    "redirect_url": "https://app.sandbox.midtrans.com/snap/v2/..."
-  }
-}
-```
-
-### 6. Payment Callback (Webhook)
-
-This endpoint is called by Midtrans after payment.
-
-```http
-POST /api/v1/payments/callback
-Content-Type: application/json
-
-{
-  "order_id": "RES-xxxxx",
-  "transaction_status": "settlement",
-  "gross_amount": "100000",
-  ...
-}
-```
-
-### 7. Get Reservation Details
-
-Get reservation by ID.
-
-```http
-GET /api/v1/reservations/:id
-```
-
-### 8. Get Customer Reservations
-
-Get all reservations for a customer email.
-
-```http
-GET /api/v1/reservations/customer?email=john@example.com
-```
-
-## 💳 Payment Flow
-
-1. User creates a reservation (status: `pending`)
-2. User initiates payment via `/api/v1/payments/process`
-3. System creates Midtrans Snap transaction
-4. User redirected to Midtrans payment page
-5. User completes payment
-6. Midtrans sends notification to `/api/v1/payments/callback`
-7. System updates reservation status to `paid`
-
-## 🔄 Reservation Status Flow
-
-```
-pending → waiting_payment → paid
-   ↓
-expired (after 30 minutes)
-```
-
-## 🧪 Testing with Midtrans Sandbox
-
-Use these test cards in Midtrans Sandbox:
-
-**Success Payment:**
-
-- Card Number: `4811 1111 1111 1114`
-- CVV: `123`
-- Exp: Any future date
-
-**Failed Payment:**
-
-- Card Number: `4911 1111 1111 1113`
-
-## 📁 Project Structure
+    ```bash
+    go run main.go
+    ```
+
+    Server API akan berjalan di `http://localhost:8080` (atau port yang ditentukan di `.env`).
+
+---
+
+## 🐳 Menjalankan dengan Docker
+
+Jika Anda memiliki Docker, Anda dapat menggunakan `Dockerfile` yang disediakan.
+
+1.  **Pastikan file `.env` Anda sudah terisi** sesuai langkah instalasi di atas.
+
+2.  **Build Docker Image:**
+
+    ```bash
+    make docker-build
+    ```
+
+    _(Atau: `docker build -t badminton-api:latest .`)_
+
+3.  **Jalankan Docker Container:**
+
+    ```bash
+    docker run --rm -p 8080:8080 --env-file .env badminton-api:latest
+    ```
+
+    Skrip `docker-entrypoint.sh` akan secara otomatis menjalankan migrasi (`./migrate`) dan _seeding_ (`./seed`) sebelum memulai aplikasi utama (`./main`).
+
+---
+
+## 📁 Struktur Proyek
+
+Berikut adalah gambaran umum struktur direktori utama:
 
 ```
 badminton-reservation-api/
-├── conf/              # Beego configuration
-├── controllers/       # HTTP request handlers
-├── models/           # Database models
-├── routers/          # API routes
-├── services/         # Business logic & integrations
-├── middleware/       # HTTP middlewares
-├── utils/            # Utility functions
-├── database/         # SQL migrations & seeds
-├── main.go          # Application entry point
-└── .env             # Environment variables
+├── cmd/                # Aplikasi CLI pendukung
+│   ├── dropdb/         # Skrip untuk membersihkan database
+│   ├── migrate/        # Skrip migrasi GORM
+│   └── seed/           # Skrip untuk seeding data
+├── controllers/        # Handler HTTP (Logika Beego)
+│   ├── reservation.go  # Logika untuk membuat & mengambil reservasi
+│   ├── payment.go      # Logika untuk memproses pembayaran & callback
+│   ├── court.go        # Logika untuk mengambil data lapangan
+│   ├── timeslot.go     # Logika untuk mengambil data slot waktu
+│   ├── date.go         # Logika untuk mengambil data tanggal
+│   └── swagger_ui.go   # Handler untuk menyajikan Swagger UI
+├── database/           # Skema & migrasi SQL
+│   ├── migrations/     # File .sql untuk struktur tabel
+│   └── seeds/          # File .sql untuk data awal
+├── docs/               # File dokumentasi Swagger (generated)
+├── middleware/         # Middleware HTTP
+│   └── cors.go         # Konfigurasi CORS
+├── models/             # Model data (structs) dan query ORM
+│   ├── reservation.go  # Model & logika database Reservasi
+│   ├── payment.go      # Model & logika database Pembayaran
+│   └── ...
+├── routers/            # Definisi rute API
+│   └── route.go        # Mendaftarkan semua endpoint controller
+├── services/           # Logika bisnis eksternal
+│   └── payment/        # Logika integrasi Midtrans
+├── utils/              # Fungsi helper
+│   ├── database.go     # Koneksi DB
+│   ├── response.go     # Standar respon JSON
+│   └── validator.go    # Validasi email, telepon, dll.
+├── .env.example        # Template konfigurasi
+├── Dockerfile          #
+├── go.mod              # Dependensi Go
+├── main.go             # Entrypoint aplikasi
+└── Makefile            # Skrip helper
 ```
 
-## 🐛 Troubleshooting
+---
 
-### Database connection error
+## 📚 Dokumentasi API (Endpoints)
 
-Make sure your Neon/Postgres credentials are correct and the database is accessible.
+Untuk dokumentasi interaktif, jalankan server dan kunjungi:
+**➡️ `http://localhost:8080/swagger`**
 
-### Payment not working
+Endpoint utama yang tersedia di bawah `/api/v1`:
 
-1. Check if Midtrans credentials are correct
-2. Ensure callback URL is accessible (use ngrok for local testing)
-3. Check Midtrans dashboard for transaction logs
-
-### Reservation expires too fast
-
-Adjust `RESERVATION_TIMEOUT_MINUTES` in `.env` file.
-
-## 📝 License
-
-MIT License
-
-## 🤝 Contributing
-
-Pull requests are welcome! For major changes, please open an issue first.
-
-## 📞 Support
-
-For questions or issues, please open an issue in the repository.
+| Method | Endpoint                        | Deskripsi                                                                       |
+| :----- | :------------------------------ | :------------------------------------------------------------------------------ |
+| `GET`  | `/health`                       | Memeriksa status kesehatan API.                                                 |
+| `GET`  | `/api/v1/dates`                 | Mendapatkan daftar tanggal yang tersedia untuk pemesanan.                       |
+| `GET`  | `/api/v1/courts/all`            | Mendapatkan daftar semua lapangan yang terdaftar (aktif).                       |
+| `GET`  | `/api/v1/courts`                | Mendapatkan lapangan yang _tersedia_ (Query: `booking_date`, `timeslot_id`).    |
+| `GET`  | `/api/v1/timeslots/all`         | Mendapatkan daftar semua slot waktu global.                                     |
+| `GET`  | `/api/v1/timeslots`             | Mendapatkan slot waktu & ketersediaannya (Query: `booking_date`, `court_id`).   |
+| `POST` | `/api/v1/reservations`          | Membuat reservasi baru.                                                         |
+| `GET`  | `/api/v1/reservations/:id`      | Mengambil detail reservasi berdasarkan ID-nya.                                  |
+| `GET`  | `/api/v1/reservations/customer` | Mencari semua reservasi berdasarkan email (Query: `email`).                     |
+| `POST` | `/api/v1/payments/process`      | Memulai proses pembayaran untuk reservasi (Body: `reservation_id`).             |
+| `GET`  | `/api/v1/payments/:id`          | Mendapatkan status pembayaran (ID bisa berupa ID Reservasi atau ID Pembayaran). |
+| `POST` | `/api/v1/payments/callback`     | **[WEBHOOK]** Endpoint internal untuk menerima notifikasi dari Midtrans.        |
