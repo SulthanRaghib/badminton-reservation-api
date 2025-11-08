@@ -10,14 +10,41 @@ Proyek ini berfungsi sebagai backend untuk aplikasi frontend Next.js berikut:
 
 ## ✨ Fitur Utama
 
-- **🏸 Manajemen Lapangan & Slot Waktu:** Menyediakan endpoint untuk mengambil daftar tanggal yang tersedia (`/api/v1/dates`), semua lapangan (`/api/v1/courts/all`), dan ketersediaan slot waktu secara dinamis (`/api/v1/timeslots`).
-- **🧾 Manajemen Reservasi:** Alur lengkap untuk membuat reservasi (`POST /api/v1/reservations`), mengambil detail reservasi berdasarkan ID (`GET /api/v1/reservations/:id`), dan mencari riwayat reservasi berdasarkan email pelanggan (`GET /api/v1/reservations/customer`).
-- **💳 Integrasi Pembayaran Midtrans:** Memproses pembuatan transaksi pembayaran (`POST /api/v1/payments/process`) dan menangani _callback_ (webhook) dari Midtrans untuk memperbarui status pembayaran secara otomatis (`POST /api/v1/payments/callback`).
-- **⌛ Reservasi Berbatas Waktu:** Reservasi yang baru dibuat berstatus `pending` dan akan otomatis `expired` jika tidak dibayar dalam 30 menit (dapat dikonfigurasi melalui `.env`).
-- **🔄 Ketersediaan Slot Dinamis:** Slot waktu akan otomatis ditandai sebagai `unavailable` saat reservasi dibuat dan akan tersedia kembali (`available`) jika reservasi `expired` atau `cancelled`.
-- **🐳 Dukungan Docker:** Termasuk `Dockerfile` dan `docker-entrypoint.sh` untuk build dan deployment yang mudah, yang secara otomatis menjalankan migrasi dan _seeding_.
-- **🧰 Utilitas Database:** Dilengkapi dengan skrip `Makefile` dan CLI (`cmd/`) untuk migrasi database GORM (`make gorm-migrate`) dan _seeding_ data awal (`make db-seed-run`).
-- **📖 Dokumentasi API:** Dokumentasi Swagger UI yang _self-hosted_ tersedia di endpoint `/swagger`.
+Ringkasan fitur utama yang disediakan oleh API ini:
+
+- **🏸 Manajemen Lapangan & Slot Waktu**
+
+  - GET `/api/v1/dates` — daftar tanggal yang tersedia untuk pemesanan
+  - GET `/api/v1/courts/all` — daftar semua lapangan
+  - GET `/api/v1/timeslots` — daftar slot waktu dan ketersediaannya (query: `booking_date`, `court_id`)
+
+- **🧾 Manajemen Reservasi**
+
+  - POST `/api/v1/reservations` — buat reservasi baru
+  - GET `/api/v1/reservations/:id` — ambil detail reservasi berdasarkan ID
+  - GET `/api/v1/reservations/customer` — cari riwayat reservasi berdasarkan email (query: `email`)
+
+- **💳 Integrasi Pembayaran (Midtrans)**
+
+  - POST `/api/v1/payments/process` — inisiasi transaksi pembayaran untuk reservasi
+  - POST `/api/v1/payments/callback` — webhook callback dari Midtrans untuk memperbarui status pembayaran
+
+- **⌛ Reservasi Berbatas Waktu**
+
+  - Reservasi awal berstatus `pending` dan akan otomatis `expired` jika tidak dibayar dalam 30 menit (nilai dapat diubah lewat `.env`)
+
+- **🔄 Ketersediaan Slot Dinamis**
+
+  - Saat reservasi dibuat, slot untuk `court_id` + `timeslot_id` pada `booking_date` akan ditandai `unavailable`.
+  - Jika reservasi `expired` atau `cancelled`, slot akan dikembalikan menjadi `available`.
+
+- **🐳 Dukungan Docker & Otomatisasi**
+
+  - `Dockerfile` + `docker-entrypoint.sh` otomatis menjalankan migrasi dan seeding saat container dijalankan.
+  - Tersedia target `make` dan beberapa CLI (dalam `cmd/`) untuk migrasi, seed, dan utilitas DB.
+
+- **📖 Dokumentasi API**
+  - Swagger UI tersedia di `/swagger` (self-hosted) untuk dokumentasi interaktif.
 
 ---
 
